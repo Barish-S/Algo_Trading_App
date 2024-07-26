@@ -68,6 +68,8 @@ const Forward = () => {
     acc.totalProfit += item[5] ? 1 : 0; // Assuming column 5 is Profit 1%
     acc.totalLoss += item[7] ? 1 : 0; // Assuming column 7 is Stop Loss
     acc.totalOpenPrice += parseFloat(item[2]) || 0; // Assuming column 2 is Open Price
+    acc.totalEntryPrice += parseFloat(item[3]) || 0;
+    acc.totalProfitPrice += parseFloat(item[5]) || 0;
     acc.totalClosePrice += parseFloat(item[9]) || 0; // Assuming column 9 is Closing Price
     acc.totalStopPrice += parseFloat(item[7]) || 0; // Assuming column 7 is Stop Loss
     acc.totalEntryVol += parseFloat(item[11]) || 0; // Assuming column 11 is Entry Volume
@@ -89,6 +91,8 @@ const Forward = () => {
     totalProfit: 0,
     totalLoss: 0,
     totalOpenPrice: 0,
+    totalEntryPrice:0,
+    totalProfitPrice:0,
     totalClosePrice: 0,
     totalStopPrice: 0,
     totalEntryVol: 0,
@@ -274,8 +278,8 @@ const Forward = () => {
                 <td>{totals.totalLoss}</td>
                 <td>{totals.totalNull}</td>
                 <td>{totals.totalOpenPrice.toFixed(2)}</td>
-                <td></td>
-                <td></td>
+                <td>{totals.totalEntryPrice.toFixed(2)}</td>
+                <td>{totals.totalProfitPrice.toFixed(2)}</td>
                 <td>{totals.totalClosePrice.toFixed(2)}</td>
                 <td>{totals.totalStopPrice.toFixed(2)}</td>
                 <td>{totals.totalEntryVol.toFixed(2)}</td>
