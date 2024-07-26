@@ -12,6 +12,8 @@
     "browserify-fs": "^1.0.0",
     "buffer": "^6.0.3",
     "chart.js": "^4.4.3",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
     "odbc": "^2.4.8",
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
@@ -27,7 +29,8 @@
     "recharts": "^2.12.7",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",

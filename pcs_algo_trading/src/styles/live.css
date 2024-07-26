@@ -55,3 +55,16 @@ body {
     justify-content: space-around;
     align-items: center;
 }
+
+.table-success {
+    background-color: green !important;
+    color: white; /* Optional: if you want the text color to be white */
+    border: 2px solid green; /* Apply green border */
+  }
+  
+  .table-danger {
+    background-color: red !important;
+    color: white; /* Optional: if you want the text color to be white */
+    border: 2px solid red; /* Apply red border */
+  }
+  

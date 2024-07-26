@@ -8,7 +8,7 @@ import Filtered_Data from './features/filtered_data';
 import All_Companies from './features/all_companies';
 import Cumulatives from './features/cumulative';
 import Averages from './features/average';
-import Live from './features/live_data';
+import Live from './features/forward';
 
 const Dashboard = () => {
 
