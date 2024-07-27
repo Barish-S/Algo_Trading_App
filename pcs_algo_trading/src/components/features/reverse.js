@@ -297,7 +297,7 @@ const Reverse = () => {
         </div>
         <br />
         <div id="table-to-pdf" className="square border border-dark">
-          <Table bordered hover variant="dark">
+          <Table bordered hover responsive variant="dark">
             <thead>
               <tr>
                 <th>Total Companies</th>

@@ -296,7 +296,7 @@ const Forward = () => {
         </div>
         <br />
         <div id="table-to-pdf" className="square border border-dark">
-          <Table bordered hover variant="dark">
+          <Table bordered responsive hover variant="dark">
             <thead>
               <tr>
                 <th>Total Companies</th>
