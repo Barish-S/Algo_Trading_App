@@ -52,10 +52,25 @@ const Reverse = () => {
     let sortableData = [...data];
     if (sortConfig.key !== null) {
       sortableData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        // Handle null values
+        if (aValue === null && bValue !== null) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        if (aValue !== null && bValue === null) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (aValue === null && bValue === null) {
+          return 0;
+        }
+
+        // Handle non-null values
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
           return sortConfig.direction === 'asc' ? 1 : -1;
         }
         return 0;
@@ -64,6 +79,7 @@ const Reverse = () => {
     return sortableData;
   }, [data, sortConfig]);
 
+
   // Calculate totals and sums
   const totals = data.reduce((acc, item) => {
     const nullStatus = (item[5] == null && item[7] == null) ? parseFloat(item[9]) - parseFloat(item[3]) : 0;
@@ -71,12 +87,15 @@ const Reverse = () => {
     acc.totalProfit += item[5] ? 1 : 0; // Assuming column 5 is Profit 1%
     acc.totalLoss += item[7] ? 1 : 0; // Assuming column 7 is Stop Loss
     acc.totalOpenPrice += parseFloat(item[2]) || 0; // Assuming column 2 is Open Price
+    acc.totalEntryPrice += parseFloat(item[3]) || 0;
+    acc.totalProfitPrice += parseFloat(item[5]) || 0;
     acc.totalClosePrice += parseFloat(item[9]) || 0; // Assuming column 9 is Closing Price
     acc.totalStopPrice += parseFloat(item[7]) || 0; // Assuming column 7 is Stop Loss
     acc.totalEntryVol += parseFloat(item[11]) || 0; // Assuming column 11 is Entry Volume
     acc.totalYesterdayVol += parseFloat(item[12]) || 0; // Assuming column 12 is Yesterday Volume
     acc.totalAvg += parseFloat(item[13]) || 0; // Assuming column 13 is Average
-
+    acc.profitValue=(acc.totalEntryPrice/acc.totalCompanies)*acc.totalProfit
+    acc.lossValue=(acc.totalEntryPrice/acc.totalCompanies)*acc.totalLoss
     if (nullStatus !== 0) {
       acc.nullTotal += nullStatus;
       if (nullStatus > 0) {
@@ -92,6 +111,8 @@ const Reverse = () => {
     totalProfit: 0,
     totalLoss: 0,
     totalOpenPrice: 0,
+    totalEntryPrice:0,
+    totalProfitPrice:0,
     totalClosePrice: 0,
     totalStopPrice: 0,
     totalEntryVol: 0,
@@ -99,23 +120,49 @@ const Reverse = () => {
     totalAvg: 0,
     nullTotal: 0,
     positiveCount: 0,
-    negativeCount: 0
+    negativeCount: 0,
+    profitValue: 0,
+    lossValue: 0,
+
   });
 
   totals.totalNull = totals.totalCompanies - totals.totalProfit - totals.totalLoss;
 
+  
   const generatePDF = () => {
     const input = document.getElementById('table-to-pdf');
-    html2canvas(input, { scale: 3, useCORS: true, logging: true })
+    
+    // Adjust the scale to fit more data in a single page
+    html2canvas(input, { scale: 2, useCORS: true, logging: true })
       .then((canvas) => {
-        const imgData = canvas.toDataURL('image/jpeg', 0.8); // Reduce quality to 0.5
-        const pdf = new jsPDF('p', 'mm', 'letter');
+        const imgData = canvas.toDataURL('image/jpeg', 1.0); // Ensure high quality
+        const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+  
+        let imgHeight = (pdfWidth / canvasWidth) * canvasHeight;
+        let heightLeft = imgHeight;
+        let position = 0;
+  
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+  
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+  
         pdf.save('table.pdf');
+      })
+      .catch((error) => {
+        console.error("Error generating PDF: ", error);
       });
   };
+    
 
   const generateExcel = () => {
     const wb = XLSX.utils.book_new();
@@ -156,7 +203,7 @@ const Reverse = () => {
       <Navbar />
       <main className='main-container'>
         <div className='main-title'>
-          <h1>Live Data | Reverse</h1>
+          <h1>Live Data | Forward</h1>
         </div>
         <div className='inputs'>
           <InputGroup className="mb-3">
@@ -258,8 +305,10 @@ const Reverse = () => {
                 <th>No.of Loss</th>
                 <th>No.of Null</th>
                 <th>Open_Price Total</th>
-                <th>Close_Price Total</th>
+                <th>Entry_Price Total</th>
+                <th>Profit Total</th>
                 <th>Stop_Price Total</th>
+                <th>Close_Price Total</th>
                 <th>Entry_Vol Total</th>
                 <th>Yesterday_Vol Total</th>
                 <th>Avg Total</th>
@@ -271,12 +320,14 @@ const Reverse = () => {
             <tbody>
               <tr>
                 <td>{totals.totalCompanies}</td>
-                <td>{totals.totalProfit}</td>
-                <td>{totals.totalLoss}</td>
+                <td>{totals.totalProfit}  [<b>P.V : {totals.profitValue.toFixed(2)}</b>]</td>
+                <td>{totals.totalLoss}  [<b>L.V : {totals.lossValue.toFixed(2)}</b>]</td>
                 <td>{totals.totalNull}</td>
                 <td>{totals.totalOpenPrice.toFixed(2)}</td>
-                <td>{totals.totalClosePrice.toFixed(2)}</td>
+                <td>{totals.totalEntryPrice.toFixed(2)}</td>
+                <td>{totals.totalProfitPrice.toFixed(2)}</td>
                 <td>{totals.totalStopPrice.toFixed(2)}</td>
+                <td>{totals.totalClosePrice.toFixed(2)}</td>
                 <td>{totals.totalEntryVol.toFixed(2)}</td>
                 <td>{totals.totalYesterdayVol.toFixed(2)}</td>
                 <td>{totals.totalAvg.toFixed(2)}</td>
@@ -286,36 +337,38 @@ const Reverse = () => {
               </tr>
             </tbody>
           </Table>
-          <Table bordered hover variant="light" className="square border border-dark">
+          <Table bordered hover responsive className="table">
             <thead>
               <tr>
-                <th>Company Name</th>
-                <th>Open Price</th>
-                <th>Entry Price</th>
-                <th onClick={() => handleSort(4)}>Entry Time</th>
-                <th>Profit 1%</th>
-                <th onClick={() => handleSort(6)}>Achieved Time</th>
-                <th>Stop Loss</th>
-                <th onClick={() => handleSort(8)}>Loss Time</th>
-                <th onClick={() => handleSort(10)}>Closing Price</th>
-                <th>Closing Time</th>
-                <th>Entry Volume</th>
-                <th>Yesterday Volume</th>
-                <th>Average</th>
-                <th>Null Status</th>
+                <th>No's</th>
+                <th onClick={() => handleSort(1)}>Company Name {sortConfig.key === 1 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(2)}>Open Price {sortConfig.key === 2 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(3)}>Entry Price {sortConfig.key === 3 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(4)}>Entry Time {sortConfig.key === 4 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(5)}>Profit 1% {sortConfig.key === 5 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(6)}>Achieved Time {sortConfig.key === 6 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(7)}>Stop Loss {sortConfig.key === 7 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(8)}>Loss Time {sortConfig.key === 8 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(9)}>Closing Price {sortConfig.key === 9 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(10)}>Closing Time {sortConfig.key === 10 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(11)}>Entry Volume {sortConfig.key === 11 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(12)}>Yesterday Volume {sortConfig.key === 12 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(13)}>Average {sortConfig.key === 13 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort('nullStatus')}>Null Status {sortConfig.key === 'nullStatus' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
               </tr>
             </thead>
             <tbody>
               {sortedData.map((item, index) => (
                 <tr key={index} className={getRowClass(item)}>
+                  <td>{index + 1}</td>
                   <td>{item[1]}</td>
                   <td>{item[2]}</td>
                   <td>{item[3]}</td>
                   <td>{item[4]}</td>
-                  <td>{item[5] == null ? "Null" : item[5]}</td>
-                  <td>{item[6] == null ? "Null" : item[6]}</td>
-                  <td>{item[7] == null ? "Null" : item[7]}</td>
-                  <td>{item[8] == null ? "Null" : item[8]}</td>
+                  <td>{item[5] == null ? "NULL" : item[5]}</td>
+                  <td>{item[6] == null ? "NULL" : item[6]}</td>
+                  <td>{item[7] == null ? "NULL" : item[7]}</td>
+                  <td>{item[8] == null ? "NULL" : item[8]}</td>
                   <td>{item[9]}</td>
                   <td>{item[10]}</td>
                   <td>{item[11]}</td>
@@ -331,5 +384,6 @@ const Reverse = () => {
     </>
   );
 };
+
 
 export default Reverse;
