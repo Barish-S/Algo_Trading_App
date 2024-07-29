@@ -34,7 +34,7 @@ const Reverse = () => {
     fetchData();
 
     // Set up interval to fetch data every 5 seconds
-    const intervalId = setInterval(fetchData, 5000);
+    const intervalId = setInterval(fetchData, 1000);
 
     // Clear the interval when the component unmounts
     return () => clearInterval(intervalId);
@@ -94,8 +94,8 @@ const Reverse = () => {
     acc.totalEntryVol += parseFloat(item[11]) || 0; // Assuming column 11 is Entry Volume
     acc.totalYesterdayVol += parseFloat(item[12]) || 0; // Assuming column 12 is Yesterday Volume
     acc.totalAvg += parseFloat(item[13]) || 0; // Assuming column 13 is Average
-    acc.profitValue=(acc.totalEntryPrice/acc.totalCompanies)*acc.totalProfit
-    acc.lossValue=(acc.totalEntryPrice/acc.totalCompanies)*acc.totalLoss
+    acc.profitValue=(acc.totalProfitPrice/101)*acc.totalProfit
+    acc.lossValue=(acc.totalStopPrice/99)*acc.totalLoss
     if (nullStatus !== 0) {
       acc.nullTotal += nullStatus;
       if (nullStatus > 0) {
