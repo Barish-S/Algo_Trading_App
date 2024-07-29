@@ -17,6 +17,9 @@ const Forward = () => {
   const status = useSelector((state) => state.stockData.sidebarStatus);
   const [data, setData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
+
 
   useEffect(() => {
     const fetchData = () => {
@@ -78,9 +81,38 @@ const Forward = () => {
     return sortableData;
   }, [data, sortConfig]);
 
+  const processedData = React.useMemo(() => {
+    let filtered = [...sortedData]; // Use sortedData to maintain sorting
+
+    if (searchTerm) {
+      filtered = filtered.filter(item => item[1].toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+
+    if (filterCriteria.column && filterCriteria.from && filterCriteria.to) {
+      const columnIndex = parseInt(filterCriteria.column);
+      filtered = filtered.filter(item => {
+        const value = parseFloat(item[columnIndex]);
+        const from = parseFloat(filterCriteria.from);
+        const to = parseFloat(filterCriteria.to);
+        return value >= from && value <= to;
+      });
+    }
+
+    return filtered;
+  }, [sortedData, searchTerm, filterCriteria]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterCriteria(prev => ({ ...prev, [name]: value }));
+  };
+  
 
   // Calculate totals and sums
-  const totals = data.reduce((acc, item) => {
+  const totals = processedData.reduce((acc, item) => {
     const nullStatus = (item[5] == null && item[7] == null) ? parseFloat(item[9]) - parseFloat(item[3]) : 0;
     acc.totalCompanies += 1;
     acc.totalProfit += item[5] ? 1 : 0; // Assuming column 5 is Profit 1%
@@ -295,7 +327,56 @@ const Forward = () => {
           <Button type='button' variant='primary' onClick={generateExcel}>Download As Excel</Button>
         </div>
         <br />
-        <div id="table-to-pdf" className="square border border-dark">
+        <hr></hr>
+        <div id="filters" style={{display:"flex",justifyContent:"center",alignItems:"center"}}>
+          <h3>Filters</h3>
+        </div>
+        <div>
+        <InputGroup className="mb-3">
+          <Form.Control
+            type="text"
+            placeholder="Search By Company Name"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <Form.Select
+            aria-label="Default select example"
+            name="column"
+            value={filterCriteria.column}
+            onChange={handleFilterChange}
+          >
+            <option>Filter By</option>
+            <option value="2">Open Price</option>
+            <option value="3">Entry Price</option>
+            <option value="4">Entry Time</option>
+            <option value="5">Profit 1%</option>
+            <option value="6">Achieved Time</option>
+            <option value="7">Stop Loss</option>
+            <option value="8">Loss Time</option>
+            <option value="9">Closing Price</option>
+            <option value="10">Closing Time</option>
+            <option value="11">Entry Volume</option>
+            <option value="12">Yesterday Volume</option>
+            <option value="13">Average</option>
+            <option value="nullStatus">Null Status</option>
+          </Form.Select>
+          <Form.Control
+            aria-label="From"
+            placeholder='From'
+            name="from"
+            value={filterCriteria.from}
+            onChange={handleFilterChange}
+          />
+          <Form.Control
+            aria-label="To"
+            placeholder='To'
+            name="to"
+            value={filterCriteria.to}
+            onChange={handleFilterChange}
+          />
+        </InputGroup>
+        </div>
+        <div id="table-to-pdf" className="square border border-dark"> 
           <Table bordered responsive hover variant="dark">
             <thead>
               <tr>
@@ -357,26 +438,26 @@ const Forward = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedData.map((item, index) => (
-                <tr key={index} className={getRowClass(item)}>
-                  <td>{index + 1}</td>
-                  <td>{item[1]}</td>
-                  <td>{item[2]}</td>
-                  <td>{item[3]}</td>
-                  <td>{item[4]}</td>
-                  <td>{item[5] == null ? "NULL" : item[5]}</td>
-                  <td>{item[6] == null ? "NULL" : item[6]}</td>
-                  <td>{item[7] == null ? "NULL" : item[7]}</td>
-                  <td>{item[8] == null ? "NULL" : item[8]}</td>
-                  <td>{item[9]}</td>
-                  <td>{item[10]}</td>
-                  <td>{item[11]}</td>
-                  <td>{item[12]}</td>
-                  <td>{item[13]}</td>
-                  <td>{item.nullStatus.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
+            {processedData.map((item, index) => (
+              <tr key={index} className={getRowClass(item)}>
+                <td>{index + 1}</td>
+                <td>{item[1]}</td>
+                <td>{item[2]}</td>
+                <td>{item[3]}</td>
+                <td>{item[4]}</td>
+                <td>{item[5] == null ? "NULL" : item[5]}</td>
+                <td>{item[6] == null ? "NULL" : item[6]}</td>
+                <td>{item[7] == null ? "NULL" : item[7]}</td>
+                <td>{item[8] == null ? "NULL" : item[8]}</td>
+                <td>{item[9]}</td>
+                <td>{item[10]}</td>
+                <td>{item[11]}</td>
+                <td>{item[12]}</td>
+                <td>{item[13]}</td>
+                <td>{item.nullStatus.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
           </Table>
         </div>
       </main>
