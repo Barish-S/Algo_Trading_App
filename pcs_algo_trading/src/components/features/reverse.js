@@ -20,17 +20,17 @@ const Reverse = () => {
   const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
 
 
+  const fetchData = () => {
+    axios.get('http://127.0.0.1:5000/reverse')
+      .then((res) => {
+        setData(res.data); // Corrected this line
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+  
   useEffect(() => {
-    const fetchData = () => {
-      axios.get('http://127.0.0.1:5000/reverse')
-        .then((res) => {
-          setData(res.data); // Corrected this line
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    };
-
     // Fetch data immediately
     fetchData();
 
@@ -228,6 +228,18 @@ const Reverse = () => {
     return '';
   };
 
+  const clearTable = () => {
+    axios.get('http://127.0.0.1:5000/clear-table')
+      .then((res) => {
+        console.log("Response from server:", res);
+        fetchData(); // Corrected this line
+        alert("Table Cleared");
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+      });
+  }
+
   return (
     <>
       <Navbar />
@@ -323,7 +335,9 @@ const Reverse = () => {
         </div>
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
           <Button type='button' variant='danger' onClick={generatePDF}>Download As PDF</Button>
-          <Button type='button' variant='primary' onClick={generateExcel}>Download As Excel</Button>
+          <Button type='button' variant='success' onClick={generateExcel}>Download As Excel</Button>
+          <Button type='button' variant='danger' onClick={()=>clearTable()}>Clear Table</Button>
+
         </div>
         <br />
         <hr></hr>
