@@ -20,23 +20,22 @@ const Forward = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
 
+  const fetchData = () => {
+    axios.get('http://127.0.0.1:5000/forward')
+      .then((res) => {
+        setData(res.data); // Corrected this line
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
 
   useEffect(() => {
-    const fetchData = () => {
-      axios.get('http://127.0.0.1:5000/forward')
-        .then((res) => {
-          setData(res.data); // Corrected this line
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    };
-
     // Fetch data immediately
     fetchData();
 
     // Set up interval to fetch data every 5 seconds
-    const intervalId = setInterval(fetchData, 1000);
+    const intervalId = setInterval(fetchData, 5000);
 
     // Clear the interval when the component unmounts
     return () => clearInterval(intervalId);
@@ -125,8 +124,8 @@ const Forward = () => {
     acc.totalEntryVol += parseFloat(item[11]) || 0; // Assuming column 11 is Entry Volume
     acc.totalYesterdayVol += parseFloat(item[12]) || 0; // Assuming column 12 is Yesterday Volume
     acc.totalAvg += parseFloat(item[13]) || 0; // Assuming column 13 is Average
-    acc.profitValue=(acc.totalProfitPrice/101)*acc.totalProfit
-    acc.lossValue=(acc.totalStopPrice/99)*acc.totalLoss
+    acc.profitValue=acc.totalProfitPrice/101
+    acc.lossValue=acc.totalStopPrice/99
     if (nullStatus !== 0) {
       acc.nullTotal += nullStatus;
       if (nullStatus > 0) {
@@ -164,7 +163,7 @@ const Forward = () => {
     const input = document.getElementById('table-to-pdf');
     
     // Adjust the scale to fit more data in a single page
-    html2canvas(input, { scale: 2, useCORS: true, logging: true })
+    html2canvas(input, { scale: 3, useCORS: true, logging: true })
       .then((canvas) => {
         const imgData = canvas.toDataURL('image/jpeg', 1.0); // Ensure high quality
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -228,6 +227,19 @@ const Forward = () => {
     }
     return '';
   };
+
+  const clearTable = () => {
+    axios.post('http://127.0.0.1:5000/clear-table')
+      .then((res) => {
+        console.log("Response from server:", res);
+        fetchData(); // Corrected this line
+        alert("Table Cleared");
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+      });
+  }
+  
 
   return (
     <>
@@ -325,6 +337,7 @@ const Forward = () => {
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
           <Button type='button' variant='danger' onClick={generatePDF}>Download As PDF</Button>
           <Button type='button' variant='primary' onClick={generateExcel}>Download As Excel</Button>
+          <Button type='button' variant='primary' onClick={()=>clearTable()}>Clear Table</Button>
         </div>
         <br />
         <hr></hr>
