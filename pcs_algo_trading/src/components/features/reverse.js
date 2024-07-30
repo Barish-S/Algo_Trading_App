@@ -15,10 +15,10 @@ import * as XLSX from 'xlsx'; // Importing the XLSX library
 const Reverse = () => {
   const status = useSelector((state) => state.stockData.sidebarStatus);
   const [data, setData] = useState([]);
+  const [inputData, setInputData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
-
 
   const fetchData = () => {
     axios.get('http://127.0.0.1:5000/reverse')
@@ -29,13 +29,13 @@ const Reverse = () => {
         console.error(err);
       });
   };
-  
+
   useEffect(() => {
     // Fetch data immediately
     fetchData();
 
     // Set up interval to fetch data every 5 seconds
-    const intervalId = setInterval(fetchData, 1000);
+    const intervalId = setInterval(fetchData, 5000);
 
     // Clear the interval when the component unmounts
     return () => clearInterval(intervalId);
@@ -124,8 +124,8 @@ const Reverse = () => {
     acc.totalEntryVol += parseFloat(item[11]) || 0; // Assuming column 11 is Entry Volume
     acc.totalYesterdayVol += parseFloat(item[12]) || 0; // Assuming column 12 is Yesterday Volume
     acc.totalAvg += parseFloat(item[13]) || 0; // Assuming column 13 is Average
-    acc.profitValue=(acc.totalProfitPrice/101)*acc.totalProfit
-    acc.lossValue=(acc.totalStopPrice/99)*acc.totalLoss
+    acc.profitValue=acc.totalProfitPrice/101
+    acc.lossValue=acc.totalStopPrice/99
     if (nullStatus !== 0) {
       acc.nullTotal += nullStatus;
       if (nullStatus > 0) {
@@ -159,6 +159,55 @@ const Reverse = () => {
   totals.totalNull = totals.totalCompanies - totals.totalProfit - totals.totalLoss;
 
   
+  // const generatePDF = () => {
+  //   const input = document.getElementById('table-to-pdf');
+    
+  //   // Adjust the scale to fit more data in a single page
+  //   html2canvas(input, { scale: 3, useCORS: true, logging: true })
+  //     .then((canvas) => {
+  //       const imgData = canvas.toDataURL('image/jpeg', 1.0); // Ensure high quality
+  //       const pdf = new jsPDF('p', 'mm', 'a4');
+  //       const pdfWidth = pdf.internal.pageSize.getWidth();
+  //       const pdfHeight = pdf.internal.pageSize.getHeight();
+  //       const canvasWidth = canvas.width;
+  //       const canvasHeight = canvas.height;
+    
+  //       let imgHeight = (pdfWidth / canvasWidth) * canvasHeight;
+  //       let heightLeft = imgHeight;
+  //       let position = 0;
+    
+  //       pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
+  //       heightLeft -= pdfHeight;
+    
+  //       while (heightLeft >= 0) {
+  //         position = heightLeft - imgHeight;
+  //         pdf.addPage();
+  //         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
+  //         heightLeft -= pdfHeight;
+  //       }
+    
+  //       pdf.save('table.pdf');
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error generating PDF: ", error);
+  //     });
+  // };
+  
+  const getCurrentDateTime = () => {
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // The hour '0' should be '12'
+    hours = String(hours).padStart(2, '0');
+
+    return `${day}-${month}-${year}_UPTO(${hours}:${minutes} ${ampm})`;
+  };
+
   const generatePDF = () => {
     const input = document.getElementById('table-to-pdf');
     
@@ -186,7 +235,7 @@ const Reverse = () => {
           heightLeft -= pdfHeight;
         }
   
-        pdf.save('table.pdf');
+        pdf.save(`Reverse_Data_${getCurrentDateTime()}.pdf`);
       })
       .catch((error) => {
         console.error("Error generating PDF: ", error);
@@ -214,7 +263,7 @@ const Reverse = () => {
     XLSX.utils.book_append_sheet(wb, wsData, 'Data');
 
     // Save to file
-    XLSX.writeFile(wb, 'data.xlsx');
+    XLSX.writeFile(wb, `Reverse_Data_${getCurrentDateTime()}.xlsx`);
   };
 
   // Function to determine row class
@@ -240,6 +289,30 @@ const Reverse = () => {
       });
   }
 
+  const getData = () => {
+    console.log(inputData)
+    let formData = new FormData();
+    formData.append("date", inputData.date);
+    formData.append("open_price", inputData.open_price);
+    formData.append("volume", inputData.volume);
+    formData.append("average", inputData.average);
+    formData.append("profit", inputData.profit);
+    formData.append("loss", inputData.loss);
+
+    axios.post('http://127.0.0.1:5000/start-trading', formData)
+        .then((res) => {
+            // clearTable()
+            console.log("Response from server:", res);
+            fetchData(); // Corrected this line
+            alert("Success")
+        })
+        .catch((err) => {
+            console.error("Error:", err);
+            alert('ERROR');
+        });
+};
+
+  
   return (
     <>
       <Navbar />
@@ -253,10 +326,11 @@ const Reverse = () => {
               <b>Date</b>
             </InputGroup.Text>
             <Form.Control
-              type='date'
+              type='text'
               aria-label="Default"
+              placeholder='YYYYMMDD'
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, date: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, date: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -267,7 +341,7 @@ const Reverse = () => {
               type='time'
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, from_time: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, from_time: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -278,7 +352,7 @@ const Reverse = () => {
               type='time'
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, to_time: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, to_time: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -288,7 +362,7 @@ const Reverse = () => {
             <Form.Control
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, open_price: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, open_price: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -298,7 +372,7 @@ const Reverse = () => {
             <Form.Control
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, volume: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, volume: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -308,7 +382,7 @@ const Reverse = () => {
             <Form.Control
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, average: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, average: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -318,7 +392,7 @@ const Reverse = () => {
             <Form.Control
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, profit: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, profit: e.target.value })}
             />
           </InputGroup>
           <InputGroup className="mb-3">
@@ -328,16 +402,15 @@ const Reverse = () => {
             <Form.Control
               aria-label="Default"
               aria-describedby="inputGroup-sizing-default"
-              onKeyUp={(e) => setData({ ...data, loss: e.target.value })}
+              onKeyUp={(e) => setInputData({ ...inputData, loss: e.target.value })}
             />
           </InputGroup>
-          <Button type='button' variant='danger' style={{ marginBottom: '15px' }}>Submit</Button>
+          <Button type='button' variant='danger' onClick={()=>getData()} style={{ marginBottom: '15px' }}>Submit</Button>
         </div>
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
           <Button type='button' variant='danger' onClick={generatePDF}>Download As PDF</Button>
           <Button type='button' variant='success' onClick={generateExcel}>Download As Excel</Button>
           <Button type='button' variant='danger' onClick={()=>clearTable()}>Clear Table</Button>
-
         </div>
         <br />
         <hr></hr>
@@ -477,5 +550,6 @@ const Reverse = () => {
     </>
   );
 };
+
 
 export default Reverse;

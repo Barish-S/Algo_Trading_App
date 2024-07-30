@@ -194,11 +194,26 @@ const Forward = () => {
   //     });
   // };
   
+  const getCurrentDateTime = () => {
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // The hour '0' should be '12'
+    hours = String(hours).padStart(2, '0');
+
+    return `${day}-${month}-${year}_UPTO(${hours}:${minutes} ${ampm})`;
+  };
+
   const generatePDF = () => {
     const input = document.getElementById('table-to-pdf');
     
     // Adjust the scale to fit more data in a single page
-    html2canvas(input, { scale: 3, useCORS: true, logging: true })
+    html2canvas(input, { scale: 2, useCORS: true, logging: true })
       .then((canvas) => {
         const imgData = canvas.toDataURL('image/jpeg', 1.0); // Ensure high quality
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -221,7 +236,7 @@ const Forward = () => {
           heightLeft -= pdfHeight;
         }
   
-        pdf.save('table.pdf');
+        pdf.save(`Forward_Data_${getCurrentDateTime()}.pdf`);
       })
       .catch((error) => {
         console.error("Error generating PDF: ", error);
@@ -249,7 +264,7 @@ const Forward = () => {
     XLSX.utils.book_append_sheet(wb, wsData, 'Data');
 
     // Save to file
-    XLSX.writeFile(wb, 'data.xlsx');
+    XLSX.writeFile(wb, `Forward_Data_${getCurrentDateTime()}.xlsx`);
   };
 
   // Function to determine row class
@@ -287,9 +302,10 @@ const Forward = () => {
 
     axios.post('http://127.0.0.1:5000/start-trading', formData)
         .then((res) => {
-            clearTable()
+            // clearTable()
             console.log("Response from server:", res);
             fetchData(); // Corrected this line
+            alert("Success")
         })
         .catch((err) => {
             console.error("Error:", err);
