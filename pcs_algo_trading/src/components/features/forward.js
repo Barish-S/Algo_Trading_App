@@ -5,16 +5,18 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Navbar from '../Navbar_Live';
 import '../../styles/live.css';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx'; // Importing the XLSX library
-
+import { useNavigate } from 'react-router-dom';
 
 const Forward = () => {
-  const status = useSelector((state) => state.stockData.sidebarStatus);
+  const globeData = useSelector((state) => state.stockData.datas);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [data, setData] = useState([]);
   const [inputData, setInputData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -25,6 +27,7 @@ const Forward = () => {
     axios.get('http://127.0.0.1:5000/forward')
       .then((res) => {
         setData(res.data); // Corrected this line
+        // dispatch(setAllData(res.data))
       })
       .catch((err) => {
         console.error(err);
@@ -521,12 +524,13 @@ const Forward = () => {
                 <th onClick={() => handleSort(11)}>Entry Volume {sortConfig.key === 11 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
                 <th onClick={() => handleSort(12)}>Yesterday Volume {sortConfig.key === 12 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
                 <th onClick={() => handleSort(13)}>Average {sortConfig.key === 13 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
+                <th onClick={() => handleSort(14)}>AVG_% {sortConfig.key === 14 ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
                 <th onClick={() => handleSort('nullStatus')}>Null Status {sortConfig.key === 'nullStatus' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : null}</th>
               </tr>
             </thead>
             <tbody>
             {processedData.map((item, index) => (
-              <tr key={index} className={getRowClass(item)}>
+              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}`)}>
                 <td>{index + 1}</td>
                 <td>{item[1]}</td>
                 <td>{item[2]}</td>
@@ -540,7 +544,8 @@ const Forward = () => {
                 <td>{item[10]}</td>
                 <td>{item[11]}</td>
                 <td>{item[12]}</td>
-                <td>{item[13]}</td>
+                <td>{item[13].toFixed(2)}</td>
+                <td>{item[14].toFixed(2)}</td>
                 <td>{item.nullStatus.toFixed(2)}</td>
               </tr>
             ))}

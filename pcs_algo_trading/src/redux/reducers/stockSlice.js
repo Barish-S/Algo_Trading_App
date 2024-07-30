@@ -8,7 +8,7 @@ export const stockSlice = createSlice({
   },
 
   reducers: {
-    setData:(state,action)=>{
+    setAllData:(state,action)=>{
       state.datas=action.payload
     },
     setSidebarStatus:(state,action)=>{
@@ -20,4 +20,4 @@ export const stockSlice = createSlice({
 
 
 export default stockSlice.reducer
-export const {setData,setSidebarStatus } = stockSlice.actions
+export const {setAllData,setSidebarStatus } = stockSlice.actions

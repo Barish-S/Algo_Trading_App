@@ -4,6 +4,7 @@ import LiveData from './components/live';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Forward from './components/features/forward';
 import Reverse from './components/features/reverse';
+import Statistics from './components/features/dashboard';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/historical" element={<Dashboard />} />
             <Route path='/forward' element={<Forward />} />
             <Route path='/reverse' element={<Reverse />} />
+            <Route path='/dashboard/:symbol' element={<Statistics />} />
           </Routes>
         </Router>
       </header>
