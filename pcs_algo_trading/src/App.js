@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Forward from './components/features/forward';
 import Reverse from './components/features/reverse';
 import Statistics from './components/features/dashboard';
+import Historical from './components/features/history_fetching';
 
 function App() {
   return (
@@ -13,10 +14,10 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<LiveData />} />
-            <Route path="/historical" element={<Dashboard />} />
+            <Route path="/historical" element={<Historical />} />
             <Route path='/forward' element={<Forward />} />
             <Route path='/reverse' element={<Reverse />} />
-            <Route path='/dashboard/:symbol' element={<Statistics />} />
+            <Route path='/dashboard/:symbol/:component' element={<Statistics />} />
           </Routes>
         </Router>
       </header>

@@ -3,29 +3,31 @@ import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
+import Navbar from '../Navbar_Live';
 import '../../styles/live.css';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
-import Navbar from '../Navbar_Live';
 import * as XLSX from 'xlsx'; // Importing the XLSX library
 import { useNavigate } from 'react-router-dom';
+import { setPageStatus } from '../../redux/reducers/stockSlice';
 
-
-const Reverse = () => {
-  const status = useSelector((state) => state.stockData.sidebarStatus);
-  const [data, setData] = useState([]);
+const Historical_Reverse = () => {
+  const globeStatus = useSelector((state) => state.stockData.pageStatus);
+  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const [inputData, setInputData] = useState([]);
+  const [data, setData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
 
   const fetchData = () => {
-    axios.get('http://127.0.0.1:5000/reverse')
+    axios.get('http://127.0.0.1:5000/history-reverse')
       .then((res) => {
         setData(res.data); // Corrected this line
+        // dispatch(setAllData(res.data))
       })
       .catch((err) => {
         console.error(err);
@@ -35,7 +37,7 @@ const Reverse = () => {
   useEffect(() => {
     // Fetch data immediately
     fetchData();
-
+    dispatch(setPageStatus("history_reverse"))
     // Set up interval to fetch data every 5 seconds
     const intervalId = setInterval(fetchData, 5000);
 
@@ -159,42 +161,7 @@ const Reverse = () => {
   });
 
   totals.totalNull = totals.totalCompanies - totals.totalProfit - totals.totalLoss;
-
-  
-  // const generatePDF = () => {
-  //   const input = document.getElementById('table-to-pdf');
-    
-  //   // Adjust the scale to fit more data in a single page
-  //   html2canvas(input, { scale: 3, useCORS: true, logging: true })
-  //     .then((canvas) => {
-  //       const imgData = canvas.toDataURL('image/jpeg', 1.0); // Ensure high quality
-  //       const pdf = new jsPDF('p', 'mm', 'a4');
-  //       const pdfWidth = pdf.internal.pageSize.getWidth();
-  //       const pdfHeight = pdf.internal.pageSize.getHeight();
-  //       const canvasWidth = canvas.width;
-  //       const canvasHeight = canvas.height;
-    
-  //       let imgHeight = (pdfWidth / canvasWidth) * canvasHeight;
-  //       let heightLeft = imgHeight;
-  //       let position = 0;
-    
-  //       pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
-  //       heightLeft -= pdfHeight;
-    
-  //       while (heightLeft >= 0) {
-  //         position = heightLeft - imgHeight;
-  //         pdf.addPage();
-  //         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
-  //         heightLeft -= pdfHeight;
-  //       }
-    
-  //       pdf.save('table.pdf');
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error generating PDF: ", error);
-  //     });
-  // };
-  
+ 
   const getCurrentDateTime = () => {
     const date = new Date();
     const day = String(date.getDate()).padStart(2, '0');
@@ -207,7 +174,7 @@ const Reverse = () => {
     hours = hours ? hours : 12; // The hour '0' should be '12'
     hours = String(hours).padStart(2, '0');
 
-    return `${day}-${month}-${year}_UPTO(${hours}:${minutes} ${ampm})`;
+    return `${day}-${month}-${year}`;
   };
 
   const generatePDF = () => {
@@ -237,7 +204,7 @@ const Reverse = () => {
           heightLeft -= pdfHeight;
         }
   
-        pdf.save(`Reverse_Data_${getCurrentDateTime()}.pdf`);
+        pdf.save(`Historical_Reverse_${getCurrentDateTime()}.pdf`);
       })
       .catch((error) => {
         console.error("Error generating PDF: ", error);
@@ -265,7 +232,7 @@ const Reverse = () => {
     XLSX.utils.book_append_sheet(wb, wsData, 'Data');
 
     // Save to file
-    XLSX.writeFile(wb, `Reverse_Data_${getCurrentDateTime()}.xlsx`);
+    XLSX.writeFile(wb, `Historical_Reverse_${getCurrentDateTime()}.xlsx`);
   };
 
   // Function to determine row class
@@ -281,7 +248,7 @@ const Reverse = () => {
 
   const clearTable = () => {
     let formData = new FormData();
-    formData.append("request", "reverse");
+    formData.append("request", "history-reverse");
     axios.post('http://127.0.0.1:5000/clear-table',formData)
       .then((res) => {
         console.log("Response from server:", res);
@@ -293,41 +260,14 @@ const Reverse = () => {
       });
   }
 
-  const getData = () => {
-    console.log(inputData)
-    let formData = new FormData();
-    formData.append("date", inputData.date);
-    formData.append("open_price", inputData.open_price);
-    formData.append("volume", inputData.volume);
-    formData.append("average", inputData.average);
-    formData.append("profit", inputData.profit);
-    formData.append("loss", inputData.loss);
-
-    axios.post('http://127.0.0.1:5000/start-trading', formData)
-        .then((res) => {
-            // clearTable()
-            console.log("Response from server:", res);
-            fetchData(); // Corrected this line
-            alert("Success")
-        })
-        .catch((err) => {
-            console.error("Error:", err);
-            alert('ERROR');
-        });
-};
-
   
   return (
     <>
-      <Navbar />
-      <main className='main-container'>
-        <div className='main-title'>
-          <h1>Live Data | Reverse</h1>
-        </div>
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
           <Button type='button' variant='danger' onClick={generatePDF}>Download As PDF</Button>
           <Button type='button' variant='success' onClick={generateExcel}>Download As Excel</Button>
           <Button type='button' variant='danger' onClick={()=>clearTable()}>Clear Table</Button>
+          {globeStatus=="history_forward"?<Button type='button' variant='outline-dark' onClick={()=>dispatch(setPageStatus("history_reverse"))}>Reverse Datas</Button>:<Button type='button' variant='outline-primary' onClick={()=>dispatch(setPageStatus("history_forward"))}>Forward Datas</Button>}
         </div>
         <br />
         <hr></hr>
@@ -443,7 +383,7 @@ const Reverse = () => {
             </thead>
             <tbody>
             {processedData.map((item, index) => (
-              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}/reverse`)}>
+              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}/forward`)}>
                 <td>{index + 1}</td>
                 <td>{item[1]}</td>
                 <td>{item[2]}</td>
@@ -465,10 +405,8 @@ const Reverse = () => {
           </tbody>
           </Table>
         </div>
-      </main>
     </>
   );
 };
 
-
-export default Reverse;
+export default Historical_Reverse;
