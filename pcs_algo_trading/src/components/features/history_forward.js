@@ -19,7 +19,6 @@ const Historical_Forward = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [data, setData] = useState([]);
-  const [inputData, setInputData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCriteria, setFilterCriteria] = useState({ column: '', from: '', to: '' });
@@ -41,7 +40,6 @@ const Historical_Forward = () => {
     dispatch(setPageStatus("history_forward"))
     // Set up interval to fetch data every 5 seconds
     const intervalId = setInterval(fetchData, 5000);
-
     // Clear the interval when the component unmounts
     return () => clearInterval(intervalId);
   }, []);
@@ -383,9 +381,9 @@ const Historical_Forward = () => {
             </thead>
             <tbody>
             {processedData.map((item, index) => (
-              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}/forward`)}>
+              <tr key={index} className={getRowClass(item)}>
                 <td>{index + 1}</td>
-                <td>{item[1]}</td>
+                <td onClick={()=>navigate(`/dashboard/${item[1]}/history-forward`)}>{item[1]}</td>
                 <td>{item[2]}</td>
                 <td>{item[3]}</td>
                 <td>{item[4]}</td>

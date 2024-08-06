@@ -40,7 +40,6 @@ const Historical_Reverse = () => {
     dispatch(setPageStatus("history_reverse"))
     // Set up interval to fetch data every 5 seconds
     const intervalId = setInterval(fetchData, 5000);
-
     // Clear the interval when the component unmounts
     return () => clearInterval(intervalId);
   }, []);
@@ -383,9 +382,9 @@ const Historical_Reverse = () => {
             </thead>
             <tbody>
             {processedData.map((item, index) => (
-              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}/forward`)}>
+              <tr key={index} className={getRowClass(item)} >
                 <td>{index + 1}</td>
-                <td>{item[1]}</td>
+                <td onClick={()=>navigate(`/dashboard/${item[1]}/history-reverse`)}>{item[1]}</td>
                 <td>{item[2]}</td>
                 <td>{item[3]}</td>
                 <td>{item[4]}</td>

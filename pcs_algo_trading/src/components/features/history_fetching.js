@@ -16,7 +16,6 @@ const Historical = () => {
   const globeStatus = useSelector((state) => state.stockData.pageStatus);
   const loader = useSelector((state) => state.stockData.loader);
   const dispatch = useDispatch()
-  const navigate = useNavigate()
   const [inputData, setInputData] = useState([]);
 
   useEffect(() => {

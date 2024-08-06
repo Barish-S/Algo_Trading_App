@@ -6,7 +6,7 @@ export const stockSlice = createSlice({
     sidebarStatus:"company_list",
     datas:[],
     pageStatus:"history_forward",
-    loader:false
+    loader:false,
   },
 
   reducers: {

@@ -443,9 +443,9 @@ const Reverse = () => {
             </thead>
             <tbody>
             {processedData.map((item, index) => (
-              <tr key={index} className={getRowClass(item)} onClick={()=>navigate(`/dashboard/${item[1]}/reverse`)}>
+              <tr key={index} className={getRowClass(item)}>
                 <td>{index + 1}</td>
-                <td>{item[1]}</td>
+                <td onClick={()=>navigate(`/dashboard/${item[1]}/reverse`)}>{item[1]}</td>
                 <td>{item[2]}</td>
                 <td>{item[3]}</td>
                 <td>{item[4]}</td>
@@ -457,8 +457,8 @@ const Reverse = () => {
                 <td>{item[10]}</td>
                 <td>{item[11]}</td>
                 <td>{item[12]}</td>
-                <td>{item[13].toFixed(2)}</td>
-                <td>{item[14].toFixed(2)}</td>
+                <td>{item[13]}</td>
+                <td>{item[14]}</td>
                 <td>{item.nullStatus.toFixed(2)}</td>
               </tr>
             ))}

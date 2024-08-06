@@ -21,6 +21,12 @@ const Statistics = () => {
         }else if (component=="reverse"){
           const res = await axios.get('http://127.0.0.1:5000/reverse');
           dispatch(setAllData(res.data));
+        }else if (component=="history-forward"){
+          const res = await axios.get('http://127.0.0.1:5000/history-forward');
+          dispatch(setAllData(res.data));
+        }else if (component=="history-reverse"){
+          const res = await axios.get('http://127.0.0.1:5000/history-reverse');
+          dispatch(setAllData(res.data));
         }
       } catch (err) {
         console.error(err);
