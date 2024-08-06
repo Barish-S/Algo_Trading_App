@@ -32,6 +32,7 @@ connection_pool = pooling.MySQLConnectionPool(
     user='u557876283_pcs_fintech',
     password='t1#:V8=k'
 )
+api = apidata_lib.ApiData()
 
 def initialize_connection():
     global connection, cursor
@@ -167,14 +168,12 @@ def reverse(company_name, open_price=None, entry_price=None, entry_time=None, cl
     except Error as e:
         print(f"Error while executing SQL query: {e}")
 
-api = apidata_lib.ApiData()
 
 async def main(date, entry, volume, average_percent, profit, loss):
     key = "4h67MWxZkADvtGSH89vZWo3wTvc="
     host = "apidata.accelpix.in"
     scheme = "http"
     author = await api.initialize(key, host, scheme)
-    companies = pd.read_csv("filtered_cp.csv")
     cp = []
     remove = []
     str_to_date = datetime.strptime(date, "%Y%m%d")
@@ -184,14 +183,35 @@ async def main(date, entry, volume, average_percent, profit, loss):
     while previous_day.weekday() >= 5:  # Saturday and Sunday are 5 and 6
         previous_day -= timedelta(days=1)
     previous_working_day = previous_day.strftime("%Y%m%d")
+    print(previous_working_day)
+
+    async def filter_and_collect():
+        companies = pd.read_csv('company_list.csv')
+        f_filtered_companies = []
+        i_filtered_companies = []
+        for symbol in companies['Symbol']:
+            his = await api.get_eod(symbol, previous_working_day, previous_working_day)
+            if his:
+                if 100 <= his[0]["cp"] <= 600:
+                    f_filtered_companies.append(his[0]["tkr"])
+                    i_filtered_companies.append(his[0])
+            else:
+                continue
+        filtered_df = pd.DataFrame(f_filtered_companies, columns=["Symbol"])
+        filtered_df.to_csv("filtered_cp.csv", index=False)
+        intra_df = pd.DataFrame(i_filtered_companies)
+        intra_df.to_csv("vol_cp.csv", index=False)
+        initialize_connection()
+    await filter_and_collect()
 
     output_folder = "csv"
+    companies = pd.read_csv("filtered_cp.csv")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     if not os.path.exists("check_data"):
         os.makedirs("check_data")
 
-    for company in companies["0"]:
+    for company in companies["Symbol"]:
         data = await api.get_back_ticks(company, f'{date} 09:07:00')
         cursor.execute("SELECT * FROM forward WHERE company_name = %s", (company,))
         row = cursor.fetchone()

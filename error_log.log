@@ -1,0 +1,10 @@
+2024-07-30 15:08:15,254 ERROR Task exception was never retrieved
+future: <Task finished name='Task-38' coro=<WebSocketsConnection._receive_messages() done, defined at /usr/local/lib/python3.10/dist-packages/signalrcore_async/hub/base_hub_connection.py:115> exception=ConnectionClosedOK(Close(code=1000, reason=''), Close(code=1000, reason=''), True)>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/signalrcore_async/hub/base_hub_connection.py", line 117, in _receive_messages
+    raw_message = await self._ws.recv()
+  File "/usr/local/lib/python3.10/dist-packages/websockets/legacy/protocol.py", line 568, in recv
+    await self.ensure_open()
+  File "/usr/local/lib/python3.10/dist-packages/websockets/legacy/protocol.py", line 948, in ensure_open
+    raise self.connection_closed_exc()
+websockets.exceptions.ConnectionClosedOK: received 1000 (OK); then sent 1000 (OK)
